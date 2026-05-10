@@ -13,10 +13,22 @@
     "multiselect",
     "dropdown",
     "pagination",
+    "infinite-scroll",
     "server-side",
     "search",
     "vanilla-js",
-    "no-dependencies"
+    "no-dependencies",
+    "ui-component",
+    "select"
   ],
-  "license": "MIT"
+  "author": "agentnova",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agentnova/lazyselect.git"
+  },
+  "homepage": "https://github.com/agentnova/lazyselect#readme",
+  "bugs": {
+    "url": "https://github.com/agentnova/lazyselect/issues"
+  }
 }
