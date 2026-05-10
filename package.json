@@ -1,0 +1,22 @@
+{
+  "name": "lazyselect",
+  "version": "1.0.0",
+  "description": "Lightweight, dependency-free multi-select dropdown with server-side pagination, search, and selection persistence.",
+  "main": "lazyselect.js",
+  "browser": "lazyselect.min.js",
+  "files": [
+    "lazyselect.js",
+    "lazyselect.min.js",
+    "README.md"
+  ],
+  "keywords": [
+    "multiselect",
+    "dropdown",
+    "pagination",
+    "server-side",
+    "search",
+    "vanilla-js",
+    "no-dependencies"
+  ],
+  "license": "MIT"
+}

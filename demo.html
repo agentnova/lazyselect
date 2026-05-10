@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LazySelect — Demo</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    body { padding: 30px 20px; background: #f8f9fa; }
+    .demo-card { max-width: 1100px; margin: auto; }
+    pre { background: #212529; color: #f8f9fa; padding: 14px; border-radius: 6px; font-size: .85rem; }
+    h1 { font-size: 1.4rem; }
+</style>
+</head>
+<body>
+
+<div class="demo-card card shadow-sm">
+    <div class="card-body">
+        <h1>LazySelect</h1>
+        <p class="text-muted small mb-4">
+            One <code>&lt;script&gt;</code> tag, no CSS file, no jQuery. Open the dropdowns,
+            search, scroll to load more — selections survive everything.
+        </p>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Sub Category</label>
+                <div id="container-sub_category"></div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <div id="container-department"></div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Employee</label>
+                <div id="container-employee"></div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Location</label>
+                <div id="container-location"></div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+            <button id="btn-clear" class="btn btn-outline-secondary btn-sm">Clear all</button>
+            <button id="btn-preset" class="btn btn-outline-primary btn-sm">Pre-select examples (ids 3, 7)</button>
+            <button id="btn-destroy" class="btn btn-outline-danger btn-sm">Destroy department</button>
+        </div>
+
+        <h6>Current selection (live)</h6>
+        <pre id="output">{}</pre>
+    </div>
+</div>
+
+<!-- the only library script - this is what a CDN consumer would write -->
+<script src="lazyselect.min.js"></script>
+
+<script>
+// ============================================================
+// Mock /api/items endpoint so this demo runs offline.
+// In production you'd skip this entire block.
+// ============================================================
+(function mockBackend() {
+    const data = {
+        sub_category: Array.from({length:47}, (_,i) => ({id:i+1, name:'Sub Category '+(i+1)})),
+        department:   Array.from({length:23}, (_,i) => ({id:i+1, name:'Department '+(i+1)})),
+        employee:     Array.from({length:312},(_,i) => ({id:i+1, name:'Employee #'+(i+1)})),
+        location:     Array.from({length:18}, (_,i) => ({id:i+1, name:'Location '+(i+1)})),
+    };
+    const orig = window.fetch;
+    window.fetch = function(url, opts) {
+        if (typeof url === 'string' && url.indexOf('/api/items') !== -1) {
+            const u = new URL(url, location.origin);
+            const key = u.searchParams.get('container_data');
+            const page = parseInt(u.searchParams.get('page'), 10) || 1;
+            const size = parseInt(u.searchParams.get('pageSize'), 10) || 10;
+            const search = (u.searchParams.get('search') || '').toLowerCase();
+            const all = (data[key] || []).filter(x => x.name.toLowerCase().includes(search));
+            const slice = all.slice((page-1)*size, page*size);
+            return new Promise(r => setTimeout(() =>
+                r(new Response(JSON.stringify({items: slice, total: all.length}),
+                  {status:200, headers:{'Content-Type':'application/json'}})), 250));
+        }
+        return orig.apply(this, arguments);
+    };
+})();
+
+// ============================================================
+// Actual library usage — this is the only code you'd ship.
+// ============================================================
+const filters = {
+    sub_category: new LazySelect('#container-sub_category', {
+        url: '/api/items', containerKey: 'sub_category',
+        placeholder: 'Search categories...', onChange: render
+    }),
+    department: new LazySelect('#container-department', {
+        url: '/api/items', containerKey: 'department',
+        placeholder: 'Search departments...', onChange: render
+    }),
+    employee: new LazySelect('#container-employee', {
+        url: '/api/items', containerKey: 'employee',
+        placeholder: 'Search employees...', onChange: render
+    }),
+    location: new LazySelect('#container-location', {
+        url: '/api/items', containerKey: 'location',
+        placeholder: 'Search locations...', onChange: render,
+        closeOnSelect: false
+    })
+};
+
+function render() {
+    const out = {};
+    Object.keys(filters).forEach(k => { if (filters[k]) out[k] = filters[k].getValues(); });
+    document.getElementById('output').textContent = JSON.stringify(out, null, 2);
+}
+
+document.getElementById('btn-clear').addEventListener('click',
+    () => Object.values(filters).forEach(f => f && f.clear()));
+
+document.getElementById('btn-preset').addEventListener('click',
+    () => Object.values(filters).forEach(f => f && f.setValues([3, 7])));
+
+document.getElementById('btn-destroy').addEventListener('click', () => {
+    if (filters.department) {
+        filters.department.destroy();
+        filters.department = null;
+        render();
+    }
+});
+
+render();
+</script>
+</body>
+</html>
