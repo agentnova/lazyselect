@@ -1,8 +1,20 @@
 # LazySelect
 
-> The multi-select your `<select multiple>` can't handle. Server-side paginated, searchable, dependency-free. ~4 KB gzipped.
+[![npm version](https://img.shields.io/npm/v/@agentnova/lazyselect.svg)](https://www.npmjs.com/package/@agentnova/lazyselect)
+[![license](https://img.shields.io/npm/l/@agentnova/lazyselect.svg)](https://github.com/agentnova/lazyselect/blob/main/LICENSE)
+[![jsDelivr hits](https://data.jsdelivr.com/v1/package/npm/@agentnova/lazyselect/badge)](https://www.jsdelivr.com/package/npm/@agentnova/lazyselect)
+
+> Lightweight, dependency-free multi-select dropdown with server-side pagination, search, and selection persistence.
 
 A lightweight multi-select dropdown for the case where you have thousands of options on the backend and need to load them on demand. Drop in one `<script>` tag and go.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@agentnova/lazyselect@1.0/lazyselect.min.js"></script>
+<div id="categories"></div>
+<script>
+  new LazySelect('#categories', { url: '/api/categories' });
+</script>
+```
 
 - ✅ **Zero dependencies** — no jQuery, no React, no Vue
 - ✅ **Server-side pagination** via infinite scroll
@@ -20,13 +32,13 @@ A lightweight multi-select dropdown for the case where you have thousands of opt
 ### Via CDN (recommended)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/lazyselect@1/lazyselect.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@agentnova/lazyselect@1.0/lazyselect.min.js"></script>
 ```
 
 Or unpkg:
 
 ```html
-<script src="https://unpkg.com/lazyselect@1/lazyselect.min.js"></script>
+<script src="https://unpkg.com/@agentnova/lazyselect@1/lazyselect.min.js"></script>
 ```
 
 That's it. Styles inject themselves automatically. No CSS file to include.
@@ -40,11 +52,11 @@ That's it. Styles inject themselves automatically. No CSS file to include.
 ### npm
 
 ```bash
-npm install lazyselect
+npm install @agentnova/lazyselect
 ```
 
 ```js
-import LazySelect from 'lazyselect';
+import LazySelect from "@agentnova/lazyselect";
 ```
 
 ---
@@ -54,7 +66,7 @@ import LazySelect from 'lazyselect';
 ```html
 <div id="my-filter"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/lazyselect@1/lazyselect.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@agentnova/lazyselect@1.0/lazyselect.min.js"></script>
 <script>
   const ms = new LazySelect('#my-filter', {
     url: '/api/categories',
@@ -69,6 +81,8 @@ Your endpoint should accept `?page=1&pageSize=10&search=foo` and return:
 ```json
 { "items": [{ "id": 1, "name": "Foo" }, { "id": 2, "name": "Bar" }] }
 ```
+
+That's the whole contract. Send back items, get back a working multi-select.
 
 ---
 
@@ -85,6 +99,19 @@ def load_filter_data(request):
     start = (page - 1) * page_size
     items = qs[start:start + page_size].values('id', 'name')
     return JsonResponse({'items': list(items)})
+```
+
+```javascript
+// Express / Node
+app.get('/api/categories', async (req, res) => {
+  const { page = 1, pageSize = 10, search = '' } = req.query;
+  const offset = (page - 1) * pageSize;
+  const items = await db.query(
+    'SELECT id, name FROM categories WHERE name LIKE ? LIMIT ? OFFSET ?',
+    [`%${search}%`, +pageSize, offset]
+  );
+  res.json({ items });
+});
 ```
 
 If your endpoint returns a different shape, use `responseAdapter`:
@@ -239,6 +266,14 @@ CSS class names: `.ls-container`, `.ls-search`, `.ls-dropdown`, `.ls-items`, `.l
 
 ---
 
+## How is this different from select2 / choices.js / chosen?
+
+Those are excellent libraries, but they all expect the full options list to be available client-side, or use ad-hoc AJAX patterns layered on top. LazySelect is built around server-side pagination from the start: every option you see came from a paged API request, search runs server-side, and selections persist correctly even when the user has only ever seen a fraction of the available items.
+
+If your data fits in the page, use `<select multiple>` or one of the libraries above. If you have thousands of rows, use this.
+
+---
+
 ## Browser support
 
 Modern evergreen browsers. Uses `fetch`, `Promise`, `AbortController`, `Object.assign`, and `dataset` — IE11 is not supported.
@@ -251,6 +286,10 @@ Modern evergreen browsers. Uses `fetch`, `Promise`, `AbortController`, `Object.a
 | `lazyselect.min.js` | ~11 KB |
 | Minified + gzipped | **~3.7 KB** |
 
+## Contributing
+
+Bug reports and pull requests are welcome at [github.com/agentnova/lazyselect](https://github.com/agentnova/lazyselect/issues). For substantial changes, please open an issue first to discuss.
+
 ## License
 
-MIT
+[MIT](LICENSE) © agentnova

@@ -1,5 +1,8 @@
 {
   "name": "@agentnova/lazyselect",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.0.0",
   "description": "Lightweight, dependency-free multi-select dropdown with server-side pagination, search, and selection persistence.",
   "main": "lazyselect.js",
